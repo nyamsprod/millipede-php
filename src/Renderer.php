@@ -1,165 +1,100 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Millipede;
 
+use Iterator;
 use IteratorAggregate;
+use Stringable;
 
 /**
- * A class to generate a Millipede in PHP
+ * A class to generate a Millipede in PHP.
+ * @implements IteratorAggregate<array-key, string>
  */
-class Renderer implements IteratorAggregate
+final class Renderer implements IteratorAggregate, Stringable
 {
     /**
-     * Millipede Config object
+     * Millipede padding offsets.
      *
-     * @var Config
+     * @var array<string>
      */
-    protected $config;
+    private array $paddingOffsets = [''];
+    private string $headUp = '╚⊙ ⊙╝';
+    private string $headDown = '╔⊙ ⊙╗';
+    private string $bodyUp = '╚═(███)═╝';
+    private string $bodyDown = '╔═(███)═╗';
+    private string $head;
+    private string $body;
+    private int $maxCurve;
 
-    /**
-     * Millipede padding offsets
-     *
-     * @var array
-     */
-    protected $paddingOffsets = [''];
-
-    /**
-     * Millipede header up
-     *
-     * @var string
-     */
-    protected $head_up = '╚⊙ ⊙╝';
-
-    /**
-     * Millipede header down
-     *
-     * @var string
-     */
-    protected $head_down = '╔⊙ ⊙╗';
-
-    /**
-     * Millipede body up
-     *
-     * @var string
-     */
-    protected $body_up = '╚═(███)═╝';
-
-    /**
-     * Millipede body down
-     *
-     * @var string
-     */
-    protected $body_down = '╔═(███)═╗';
-
-    /**
-     * Millipede parts
-     *
-     * @var array
-     */
-    protected $parts = [];
-
-    /**
-     * a new instance
-     *
-     * @param Config $config
-     */
-    public function __construct(Millipede $config = null)
+    public function __construct(private readonly Millipede $millipede = new Millipede())
     {
-        $this->config = $config ?: new Millipede();
-        $this->initHead();
-        $this->initBody();
-        $this->initPaddingOffsets();
-    }
-
-    /**
-     * Format the Millipede head
-     */
-    protected function initHead()
-    {
-        $head = $this->head_up;
-        if ($this->config->isReverse()) {
-            $head = $this->head_down;
+        $head = $this->headUp;
+        if ($this->millipede->isReverse) {
+            $head = $this->headDown;
         }
 
-        $repeat = $this->config->getCurve();
+        $repeat = $this->millipede->curve;
         if (0 === $repeat) {
             $repeat = 2; //to align the head with the body
         }
 
-        $this->parts['head'] = str_repeat(' ', $repeat).str_replace(
+        $this->head = str_repeat(' ', $repeat).str_replace(
             ' ',
-            str_repeat($this->config->getHead(),  $this->config->getWidth() - 2),
+            str_repeat($this->millipede->head, $this->millipede->width - 2),
             $head
         );
-    }
 
-    /**
-     * Format the Millipede Body
-     *
-     * @param string $body the default millipede body
-     *
-     * @return string
-     */
-    protected function initBody()
-    {
-        $body = $this->body_up;
-        if ($this->config->isReverse()) {
-            $body = $this->body_down;
+        $body = $this->bodyUp;
+        if ($this->millipede->isReverse) {
+            $body = $this->bodyDown;
         }
 
-        $this->parts['body'] = str_replace(
+        $this->body = str_replace(
             '███',
-            str_repeat($this->config->getSkin(), $this->config->getWidth()),
+            str_repeat($this->millipede->skin, $this->millipede->width),
             $body
         );
-    }
 
-    /**
-     * initialize Millipede padding offsets according to the config
-     */
-    protected function initPaddingOffsets()
-    {
-        $this->parts['max_curve'] = $this->config->getCurve() * 2;
-        if (0 < $this->config->getCurve()) {
-            for ($index = 1; $index <= $this->parts['max_curve']; ++$index) {
-                $delta = $index % $this->parts['max_curve'];
-                $size = (int) min($delta, $this->parts['max_curve'] - $delta);
+        $this->maxCurve = $this->millipede->curve * 2;
+        if (0 < $this->millipede->curve) {
+            for ($index = 1; $index <= $this->maxCurve; ++$index) {
+                $delta = $index % $this->maxCurve;
+                $size = min($delta, $this->maxCurve - $delta);
                 $this->paddingOffsets[] = str_repeat(' ', $size);
             }
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function __toString()
     {
         ob_start();
-        foreach ($this->getIterator() as $part) {
+        foreach ($this as $part) {
             echo $part, PHP_EOL;
         }
 
-        return ob_get_clean();
+        return (string) ob_get_clean();
     }
 
     /**
-     * {@inheritdoc}
+     * @return Iterator<array-key, string>
      */
-    public function getIterator()
+    public function getIterator(): Iterator
     {
         yield '';
 
-        $comment = $this->config->getComment();
-        if (!$this->config->isReverse() && '' !== $comment) {
+        $comment = $this->millipede->comment;
+        if (!$this->millipede->isReverse && '' !== $comment) {
             yield ' '.$comment;
             yield '';
         }
 
-        for ($offset = 0, $size = $this->config->getSize(); $offset <= $size; ++$offset) {
+        for ($offset = 0, $size = $this->millipede->size; $offset <= $size; ++$offset) {
             yield $this->getPart($offset);
         }
 
-        if ($this->config->isReverse() && '' !== $comment) {
+        if ($this->millipede->isReverse && '' !== $comment) {
             yield '';
             yield ' '.$comment;
         }
@@ -168,44 +103,36 @@ class Renderer implements IteratorAggregate
     }
 
     /**
-     * Return a Millipede part according to the given offset
-     *
-     * @param int $offset the body part offset
-     *
-     * @return string
+     * Return a Millipede part according to the given offset.
      */
-    protected function getPart($offset)
+    private function getPart(int $offset): string
     {
-        if ($this->config->isReverse()) {
-            $offset = $this->config->getSize() - $offset;
+        if ($this->millipede->isReverse) {
+            $offset = $this->millipede->size - $offset;
         }
 
-        $content = $this->parts['body'];
+        $content = $this->body;
         if (0 === $offset) {
-            $content = $this->parts['head'];
+            $content = $this->head;
         }
 
         return $this->getPadding($offset).$content;
     }
 
     /**
-     * Retrieve the Padding offset depending on the iteration
-     *
-     * @param int $offset
-     *
-     * @return string
+     * Retrieve the Padding offset depending on the iteration.
      */
-    protected function getPadding($offset)
+    private function getPadding(int $offset): string
     {
-        $curve = $this->config->getCurve();
+        $curve = $this->millipede->curve;
         if (0 === $curve) {
             return '';
         }
 
-        if ($this->config->isOpposite()) {
+        if ($this->millipede->isOpposite) {
             $offset += $curve - 1;
         }
 
-        return $this->paddingOffsets[$offset % $this->parts['max_curve']];
+        return $this->paddingOffsets[$offset % $this->maxCurve];
     }
 }

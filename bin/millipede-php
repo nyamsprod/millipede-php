@@ -49,7 +49,7 @@ EOF;
 
 require $vendor.'/autoload.php';
 
-$millipede = new Millipede();
+$millipede = new Millipede;
 
 $options = getopt('hro', [
     'help', 'reverse', 'opposite',
@@ -61,7 +61,7 @@ $options = getopt('hro', [
 $default = $millipede->toArray();
 unset($default['reverse'], $default['opposite']);
 
-$arguments = array_replace($default, $options);
+$arguments = $options + $default;
 if (isset($arguments['help']) || isset($arguments['h'])) {
     echo Cli::outln($help);
     die(0);
@@ -69,40 +69,36 @@ if (isset($arguments['help']) || isset($arguments['h'])) {
 
 try {
     $millipede = $millipede
-        ->withReverse(isset($arguments['reverse']) || isset($arguments['r']))
-        ->withOpposite(isset($arguments['opposite']) || isset($arguments['o']))
-        ->withSize($arguments['size'])
-        ->withWidth($arguments['width'])
-        ->withCurve($arguments['curve'])
-        ->withHead($arguments['head'])
-        ->withSkin($arguments['skin'])
-        ->withComment($arguments['comment'])
+        ->reverse(isset($arguments['reverse']) || isset($arguments['r']))
+        ->opposite(isset($arguments['opposite']) || isset($arguments['o']))
+        ->size($arguments['size'])
+        ->width($arguments['width'])
+        ->curve($arguments['curve'])
+        ->head($arguments['head'])
+        ->skin($arguments['skin'])
+        ->comment($arguments['comment'])
     ;
 
-    $color = 'white';
-    if (isset($arguments['color'])) {
-        $color = strtolower($arguments['color']);
-        if (strpos($color, ',')) {
-            $color = explode(',', $color);
-        }
+    $color = strtolower($arguments['color'] ?? 'white');
+    if (str_contains($color, ',')) {
+        $color = explode(',', $color);
     }
 
-    if ('random' === $color) {
-        $modifier = Cli::createFromRandom();
-    } elseif ('rainbow' === $color) {
-        $modifier = Cli::createFromRainbow();
-    } else {
-        $modifier = new Cli($color);
-    }
+    $modifier = match (true) {
+        'random' === $color => Cli::createFromRandom(),
+        'raibow' === $color => Cli::createFromRainbow(),
+        is_string($color) => new Cli($color),
+        default =>  new Cli(...$color),
+    };
 
     foreach ($modifier(new Renderer($millipede)) as $part) {
         echo $part;
     }
     die(0);
-} catch (Exception $e) {
+} catch (Exception $exception) {
     echo Cli::outln("<<reset>>"), PHP_EOL;
     echo Cli::outln("<<redbg white>>An error occurs while generating the millipede:");
-    echo Cli::outln($e->getMessage().'<<reset>>');
+    echo Cli::outln($exception->getMessage().'<<reset>>');
     echo Cli::outln($help);
     die(52);
 }

@@ -1,60 +1,55 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Millipede;
 
+use Iterator;
+
+use const PHP_OS;
+
 /**
- * A class to generate a Millipede in PHP
+ * A class to generate a Millipede in PHP.
  */
 final class Cli
 {
     /**
-     * POSIX color
+     * POSIX color.
      *
-     * @var array
+     * @var array<string>
      */
-    protected static $colorList = ['white', 'red', 'yellow', 'green', 'cyan', 'blue', 'magenta'];
+    private const COLOR_LIST = ['white', 'red', 'yellow', 'green', 'cyan', 'blue', 'magenta'];
 
-    protected $colorOffsets = [];
+    /** @var array<string> */
+    private array $colorOffsets;
 
     /**
-     * Create a Cli Renderer to Display the millipede in Rainbow
-     *
-     * @return self
+     * Create a Cli Renderer to Display the millipede in Rainbow.
      */
-    public static function createFromRandom()
+    public static function createFromRandom(): self
     {
-        return new self(self::$colorList[array_rand(self::$colorList)]);
+        return new self(self::COLOR_LIST[array_rand(self::COLOR_LIST)]);
     }
 
     /**
-     * Create a Cli Renderer to Display the millipede in Rainbow
-     *
-     * @return self
+     * Create a Cli Renderer to Display the millipede in Rainbow.
      */
-    public static function createFromRainbow()
+    public static function createFromRainbow(): self
     {
-        return new self(self::$colorList);
+        return new self(...self::COLOR_LIST);
     }
 
     /**
-     * a new instance
-     *
-     * @param mixed $colorIndex a string of an array of string representing the millipede color
+     * a new instance.
      */
-    public function __construct($colorIndex = '')
+    public function __construct(string ...$colorIndex)
     {
-        if (is_string($colorIndex)) {
-            $colorIndex = [$colorIndex];
-        }
-
         $colorIndex = array_filter(
-            array_map('strtolower', $colorIndex),
-            function ($value) {
-                return in_array($value, static::$colorList);
-            }
+            array_map(strtolower(...), $colorIndex),
+            fn (string $value): bool => in_array($value, self::COLOR_LIST, true)
         );
 
-        if (empty($colorIndex)) {
+        if ([] === $colorIndex) {
             $colorIndex = ['white'];
         }
 
@@ -62,46 +57,38 @@ final class Cli
     }
 
     /**
-     * Modifier the renderer outbut
-     *
-     * @param Renderer $renderer
-     *
-     * @return \Generator
+     * Modifier the renderer output.
      */
-    public function __invoke(Renderer $renderer)
+    public function __invoke(Renderer $renderer): Iterator
     {
+        $nbColors = count($this->colorOffsets);
         foreach ($renderer as $key => $part) {
-            $color = $this->colorOffsets[$key % count($this->colorOffsets)];
-            yield $this->outln("<<$color>>$part<<reset>>");
+            yield self::outln("<<{$this->colorOffsets[$key % $nbColors]}>>$part<<reset>>");
         }
     }
 
     /**
      * Format the text output
-     * Inspired by Aura\Cli\Stdio\Formatter (https://github.com/auraphp/Aura.Cli)
-     *
-     * @param string $str
-     *
-     * @return string
+     * Inspired by Aura\Cli\Stdio\Formatter (https://github.com/auraphp/Aura.Cli).
      */
-    public static function outln($str)
+    public static function outln(string $str): string
     {
-        return static::out($str).PHP_EOL;
+        return self::out($str).PHP_EOL;
     }
 
     /**
      * Format the text output
-     * Inspired by Aura\Cli\Stdio\Formatter (https://github.com/auraphp/Aura.Cli)
-     *
-     * @param string $str
-     *
-     * @return string
+     * Inspired by Aura\Cli\Stdio\Formatter (https://github.com/auraphp/Aura.Cli).
      */
-    public static function out($str)
+    public static function out(string $str): string
     {
+        /** @var callable|string $formatter */
         static $formatter;
+        /** @var ?Closure $func */
         static $func;
+        /** @var ?string $regex */
         static $regex;
+        /** @var array<string, string> $codes */
         static $codes = [
             'reset'      => '0',
             'bold'       => '1',
@@ -128,20 +115,14 @@ final class Cli
             'whitebg'    => '47',
         ];
 
-        if (null !== $regex) {
-            return ' '.$func($regex, $formatter, $str);
-        }
-
-        $regex = ',<<\s*((('.implode('|', array_keys($codes)).')(\s*))+)>>,Umsi';
-        $formatter = '';
-        $func = 'preg_replace';
-        if (false === strpos(strtolower(PHP_OS), 'win')) {
-            $formatter = function (array $matches) use ($codes) {
-                $str = preg_replace('/(\s+)/msi', ';', $matches[1]);
-
-                return chr(27).'['.strtr($str, $codes).'m';
-            };
-            $func = 'preg_replace_callback';
+        if (null === $regex) {
+            $regex = ',<<\s*((('.implode('|', array_keys($codes)).')(\s*))+)>>,Umsi';
+            $func = preg_replace(...);
+            $formatter = '';
+            if (!str_contains(PHP_OS, 'WIN')) {
+                $func = preg_replace_callback(...);
+                $formatter = fn (array $matches) => chr(27).'['.strtr(preg_replace('/(\s+)/msi', ';', $matches[1]), $codes).'m';
+            }
         }
 
         return ' '.$func($regex, $formatter, $str);

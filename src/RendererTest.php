@@ -1,14 +1,12 @@
 <?php
 
-namespace MillipedeTest;
+namespace Millipede;
 
-use Millipede\Millipede;
-use Millipede\Renderer;
-use PHPUnit_Framework_TestCase as TestCase;
+use PHPUnit\Framework\TestCase;
 
 class RendererTest extends TestCase
 {
-    public function testSimpleUsage()
+    public function testSimpleUsage(): void
     {
         $expected = <<<EOF
 
@@ -23,11 +21,14 @@ class RendererTest extends TestCase
 
 
 EOF;
-        $millipede = new Renderer((new Millipede())->withCurve(4)->withSize(5)->withComment('Hello World!'));
-        $this->assertSame($expected, (string) $millipede);
+        $millipede = (new Millipede())
+            ->curve(4)
+            ->size(5)
+            ->comment('Hello World!');
+        self::assertSame($expected, (string) new Renderer($millipede));
     }
 
-    public function testSimpleUsageWithoutCurve()
+    public function testSimpleUsageWithoutCurve(): void
     {
         $expected = <<<EOF
 
@@ -42,12 +43,15 @@ EOF;
 
 
 EOF;
-        $millipede = new Renderer((new Millipede())->withCurve(0)->withSize(5)->withComment('Hello World!'));
-        $this->assertSame($expected, (string) $millipede);
+        $millipede = (new Millipede())
+            ->curve(0)
+            ->size(5)
+            ->comment('Hello World!');
+        self::assertSame($expected, (string) new Renderer($millipede));
     }
 
 
-    public function testComplexUsage()
+    public function testComplexUsage(): void
     {
         $expected = <<<EOF
 
@@ -67,16 +71,14 @@ EOF;
 
 
 EOF;
-        $config = (new Millipede())
-          ->withCurve(4)
-          ->withSize(10)
-          ->withComment('Hello World!')
-          ->withOpposite(true)
-          ->withReverse(true)
-          ->withWidth(7)
-      ;
+        $millipede = (new Millipede())
+            ->curve(4)
+            ->size(10)
+            ->comment('Hello World!')
+            ->opposite(true)
+            ->reverse(true)
+            ->width(7);
 
-        $millipede = new Renderer($config);
-        $this->assertSame($expected, (string) $millipede);
+        self::assertSame($expected, (string) new Renderer($millipede));
     }
 }

@@ -115,8 +115,7 @@ Rendering a simple millipede with its default settings:
 ```php
 use Millipede\Renderer;
 
-$renderer = new Renderer();
-echo $renderer, PHP_EOL;
+echo new Renderer, PHP_EOL;
 ```
 
 will generate the following on a **CLI output**
@@ -145,13 +144,13 @@ will generate the following on a **CLI output**
  ╚═(███)═╝
 ```
 
-Of course you can be more specific in your configuration settings
+Of course, you can be more specific in your configuration settings
 
 ```php
 use Millipede\Millipede;
 use Millipede\Renderer;
 
-$millipede = (new Millipede())->withSize(5)->withComment('Hello world !');
+$millipede = (new Millipede())->size(5)->comment('Hello world !');
 echo new Renderer($millipede), PHP_EOL;
 ```
 
@@ -171,12 +170,11 @@ Hello world !
 
 For advance usage if you are requesting bigger size, the `Millipede` object implements the `IteratorAggregate` interface and return an `Generator` as to allow low memory usage while generating huge millipede.
 
-
 ```php
 use Millipede\Millipede;
 use Millipede\Renderer;
 
-$millipede = (new Millipede())->withSize(5)->withComment('Hello world !');
+$millipede = (new Millipede())->size(5)->comment('Hello world !');
 $renderer = new Renderer($config);
 foreach ($renderer as $piece) {
 	echo $piece, PHP_EOL;
@@ -202,14 +200,14 @@ The `Millipede` class properties are listed below:
 ```php
 <?php
 
-public function Millipede::getComment() : string //return the commented text
-public function Millipede::getHead() : string    //return the head pattern (a single character)
-public function Millipede::getSkin() : string    //return the body skin pattern (a single character)
-public function Millipede::getSize() : int       //return the millipede size
-public function Millipede::getWidth() : int      //return the millipede width
-public function Millipede::getCurve() : int      //return the millipede curve
-public function Millipede::isOpposite(): bool    //tell whether the millipede curve is opposite
-public function Millipede::isReverse() : bool    //tell whether the millipede is reversed
+public function Millipede::comment    // return the commented text
+public function Millipede::head       // return the head pattern (a single character)
+public function Millipede::skin       // return the body skin pattern (a single character)
+public function Millipede::size       // return the millipede size
+public function Millipede::width      // return the millipede width
+public function Millipede::curve      // return the millipede curve
+public function Millipede::isOpposite // tell whether the millipede curve is opposite
+public function Millipede::isReverse  // tell whether the millipede is reversed
 ```
 
 Modifying the `Millipede` class properties
@@ -237,13 +235,13 @@ Since the `Millipede` class is immutable you can chain each modifying methods to
 use Millipede\Millipede;
 
 $millipede = (new Millipede())
-    ->withCurve(4)
-    ->withSize(10)
-    ->withComment('Chaud devant! Mon beau millepatte doit passer!')
-    ->withOpposite(true)
-    ->withReverse(true)
-    ->withWidth(7)
-    ->withSkin('\uD83D\uDC1F')
+    ->curve(4)
+    ->size(10)
+    ->comment('Chaud devant! Mon beau millepatte doit passer!')
+    ->opposite(true)
+    ->reverse(true)
+    ->width(7)
+    ->skin('\uD83D\uDC1F')
 ;
 
 echo new Renderer($millipede);

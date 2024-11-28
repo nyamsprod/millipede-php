@@ -1,20 +1,21 @@
 #!/usr/bin/env php
 <?php
 
-use Millipede\Config;
 use Millipede\Millipede;
+use Millipede\Renderer;
 
 require 'vendor/autoload.php';
 
-if (PHP_SAPI !== 'cli') {
-    echo 'This script should be invoked via the CLI version of PHP, not the '.PHP_SAPI.' SAPI'.PHP_EOL;
-    die(52);
-}
+$millipede = (new Millipede())
+    ->curve(4)
+    ->size(10)
+    ->comment('Chaud devant! Mon beau millepatte doit passer!')
+    ->opposite(true)
+    ->reverse(false)
+    ->width(7)
+    ->skin('\uD83D\uDC1F')
+;
 
-$size = isset($argv[1]) ? $argv[1] : 20;
-$comment = isset($argv[2]) ? $argv[2] : 'Hello World!';
-$config = (new Config())->withSize($size)->withComment($comment);
-foreach (new Millipede($config) as $part) {
-	echo $part, PHP_EOL;
-}
+echo new Renderer($millipede);
+
 die(0);
