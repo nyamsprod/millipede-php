@@ -8,7 +8,7 @@ Highlights
 
 - Treats Millipede as Immutable Value Objects
 - Fully documented
-- Framework agnostic
+- Framework-agnostic
 - Composer ready, [PSR-2], and [PSR-4] compliant
 
 System Requirements
@@ -217,14 +217,14 @@ To modify/update the class properties you must use the following modifying metho
 ```php
 <?php
 
-public function Millipede::withComment(string $comment) : static
-public function Millipede::withHead(string $head) : static //a single character or a Unicode character
-public function Millipede::withSkin(string $skin) : static //a single character or a Unicode character
-public function Millipede::withSize(int $size): static
-public function Millipede::withWidth(int $width) : static
-public function Millipede::withCurve(int $curve) : static
-public function Millipede::withOpposite(bool $status) : static
-public function Millipede::withReverse(bool $status) : static
+public function Millipede::comment(string $comment) : self
+public function Millipede::head(string $head) : self //a single character or a Unicode character
+public function Millipede::skin(string $skin) : self //a single character or a Unicode character
+public function Millipede::size(int $size): self
+public function Millipede::width(int $width) : self
+public function Millipede::curve(int $curve) : self
+public function Millipede::opposite(bool $status) : self
+public function Millipede::reverse(bool $status) : self
 ```
 
 Since the `Millipede` class is immutable you can chain each modifying methods to simplify Config creation and/or modification.
