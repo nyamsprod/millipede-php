@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Millipede;
 
+use Closure;
 use Iterator;
 
 use const PHP_OS;
@@ -84,7 +85,7 @@ final class Cli
     {
         /** @var callable|string $formatter */
         static $formatter;
-        /** @var ?Closure $func */
+        /** @var Closure $func */
         static $func;
         /** @var ?string $regex */
         static $regex;
@@ -121,10 +122,15 @@ final class Cli
             $formatter = '';
             if (!str_contains(PHP_OS, 'WIN')) {
                 $func = preg_replace_callback(...);
-                $formatter = fn (array $matches) => chr(27).'['.strtr(preg_replace('/(\s+)/msi', ';', $matches[1]), $codes).'m';
+                $formatter = fn (array $matches): string => chr(27)
+                    .'['
+                    .strtr(
+                        (string) preg_replace('/(\s+)/msi', ';', $matches[1]), /* @phpstan-ignore-line */
+                        $codes
+                    ).'m';
             }
         }
 
-        return ' '.$func($regex, $formatter, $str);
+        return ' '.$func($regex, $formatter, $str);  /* @phpstan-ignore-line */
     }
 }

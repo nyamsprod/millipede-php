@@ -2,7 +2,6 @@
 
 namespace Millipede;
 
-use Iterator;
 use PHPUnit\Framework\TestCase;
 
 class CliTest extends TestCase
